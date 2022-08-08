@@ -1,20 +1,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using InfraStructure.Entity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Core.Interfaces;
 using AutoMapper;
 using ProductDemo.Helpers;
+using ProductDemo.Middleware;
+using ProductDemo.Extenions;
 
 namespace ProductDemo
 {
@@ -32,19 +25,20 @@ namespace ProductDemo
         {
             services.AddControllers();
             services.AddDbContext<StoreContext>(x=>x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-            services.AddScoped<IProductRepository,ProductRepository>();
-            services.AddScoped((typeof(IGenericRepository<>)), (typeof(GenericRepository<>)));
+
             services.AddAutoMapper(typeof(MappingProfiles));
+
+            services.AddApplicationServices();
+            services.AddSwaggerDocumentation();
 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            app.UseMiddleware<ExceptionMiddleware>();
+            
+            app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
             app.UseHttpsRedirection();
 
@@ -52,6 +46,7 @@ namespace ProductDemo
             app.UseStaticFiles();
 
             app.UseAuthorization();
+            app.UseSwaggerDocumentation();
 
             app.UseEndpoints(endpoints =>
             {
