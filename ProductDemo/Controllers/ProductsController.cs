@@ -31,11 +31,14 @@ namespace ProductDemo.Controllers
 
         // GET: api/Products
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<ProductToReturnDTO>>> GetProducts()
+        public async Task<ActionResult<Pagination<ProductToReturnDTO>>> GetProducts([FromQuery]ProductSpecParams Params)
         {
-            var Spec = new ProductsWithTypesAndBrandsSpecification();
-            var products = await _productRepo.ListAsync(Spec);
-            return Ok(Mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductToReturnDTO>>(products));
+            var Spec = new ProductsWithTypesAndBrandsSpecification(Params);
+            var Count = new ProductWithFiltersForCountSpecification(Params);
+            var totalItems = await _productRepo.CountAsync(Count);
+             var products = await _productRepo.ListAsync(Spec);
+            var data = Mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductToReturnDTO>>(products);
+            return Ok(new Pagination<ProductToReturnDTO>(Params.PageIndex,Params.PageSize,totalItems,data));
 
         }
 

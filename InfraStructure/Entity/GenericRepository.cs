@@ -35,9 +35,15 @@ namespace InfraStructure.Entity
         {
             return await ApplySpecification(Spec).ToListAsync();
         }
+        public async Task<int> CountAsync(ISpecification<T> Spec)
+        {
+            return await ApplySpecification(Spec).CountAsync();
+        }
         private IQueryable<T> ApplySpecification(ISpecification<T> Spec)
         {
             return SpecifictionEvaluator<T>.GetQuery(_context.Set<T>().AsQueryable(), Spec);
         }
+
+
     }
 }
